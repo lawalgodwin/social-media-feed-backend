@@ -23,7 +23,7 @@ The project emphasizes GraphQL API development, real-time interactions, and scal
 - **Django**: For backend development.
 - **PostgreSQL**: To store relational data efficiently.
 - **GraphQL (Graphene)**: For flexible data queries.
-- **GraphQL Playground**: For testing APIs.
+- **GraphQL Playground**: For testing our APIs.
 
 ### Key Features
 
