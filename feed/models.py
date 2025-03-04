@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from feed.managers import CustomUserManager
+from django.utils.translation import gettext_lazy as _
 
 class User(AbstractBaseUser, PermissionsMixin):
     """ The user Model an extension of the Abstract user for
@@ -14,7 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ADMIN = "admin"
     
    
-    user_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True, verbose_name="email address")
@@ -57,7 +58,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')  # The post being commented on
     content = models.TextField()  # The content of the comment
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the comment was created
-    parent_comment = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE) # For replies to comments
+    parent_comment = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE, db_index=True) # For replies to comments
 
     class Meta:
         ordering = ['-created_at']  # Comments ordered by creation time (most recent first)
@@ -70,14 +71,14 @@ class Comment(models.Model):
 # Model to track interactions like "Likes" and "Shares"
 class Interaction(models.Model):
 
-    INTERACTION_TYPES = (
-        ('like', 'Like'),
-        ('share', 'Share'),
-    )
+    class InteractionType(models.TextChoices):
+        LIKE = "like", _("Like"),
+        SHARE = "share", _("Share"),
+    
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interactions')  # User who interacted
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')  # The post being interacted with
-    interaction_type = models.CharField(max_length=10, choices=INTERACTION_TYPES)  # Type of interaction (like or share)
+    interaction_type = models.CharField(max_length=10, choices=InteractionType)  # Type of interaction (like or share)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the interaction occurred
 
     class Meta:
