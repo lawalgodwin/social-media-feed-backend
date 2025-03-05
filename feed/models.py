@@ -18,7 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True, verbose_name="email address")
+    email = models.EmailField(unique=True, verbose_name="email address", editable=False)
     password = models.CharField(max_length=128, null=True)
     role = models.CharField(choices=Role, default=Role.NORMAL, max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
