@@ -4,7 +4,7 @@ import graphene
 from graphql import GraphQLError
 from .types import InteractionType, PostType, CommentType, UserType, InteractionTypeEnum
 from .models import Interaction, Post, Comment, User
-# from django.db.models import Max
+from .permissions import check_permission
 
 
 class FeedQuery(graphene.ObjectType):
@@ -40,6 +40,8 @@ class FeedQuery(graphene.ObjectType):
         return Post.objects.prefetch_related("comments").all()
 
     def resolve_posts_by_user(root, info, user_id):
+        user = info.context.user
+        check_permission(user, Post)
         try:
             return Post.objects.filter(user=user_id)
         except Exception as exception:

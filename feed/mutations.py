@@ -1,52 +1,117 @@
 """ This module contains all the grapgql mutations """
 
 import graphene
-
+from django.contrib.auth.decorators import login_required
 from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql import GraphQLError
 from .serializers import CommentSerializer, PostSerializer, UserSerializer
 from .models import Interaction, User, Post, Comment
-from .types import InteractionTypeEnum, InteractionType
+from .types import CommentType, InteractionTypeEnum, InteractionType, PostType, UserType
 from django.db.models import Model
+import graphql_jwt
+from .permissions import check_permission, is_staff
 
 
 def deleteModel(model: Model, id: graphene.UUID):
     """ Delete the specifies model"""
     try:
-        post = model.objects.get(id=id)
-        post.delete()
+        instance = model.objects.get(id=id)
+        instance.delete()
     except Post.DoesNotExist as error:
-        raise GraphQLError("Post doest not exist")
+        raise GraphQLError("model doest not exist")
 
 
 class PostMutation(SerializerMutation):
     class Meta:
         serializer_class = PostSerializer
+        model_operations = ['update']
+        lookup_field = 'id'
 
     @classmethod
     def perform_mutate(cls, serialiser, info):
-        print(info.context.user)
+        user = info.context.user
+        check_permission(user, Post)
         return super().perform_mutate(serializer=serialiser, info=info)
 
 
+class CreatePost(graphene.Mutation):
+    post = graphene.Field(PostType)
+
+    class Arguments:
+        content = graphene.String(required=True)
+
+    def mutate(self, info, content):
+        user = info.context.user
+        post = Post(content=content, user=user)
+        post.save()
+        return CreatePost(post=post)
+
+
 class CommentMutation(SerializerMutation):
+    comment = graphene.Field(CommentType)
     class Meta:
         serializer_class = CommentSerializer
 
     @classmethod
-    def perform_mutate(cls, serialiser, info):
-        print(info.context.user)
-        return super().perform_mutate(serializer=serialiser, info=info)
+    def perform_mutate(cls, serialiser, info, **kwargs):
+        user = info.context.user
+        try:
+            check_permission(user=user, model=Comment)
+            return super().perform_mutate(serialiser, info, **kwargs)
+        except GraphQLError as error:
+            return cls(comment=None)
 
 
-class UserMutation(SerializerMutation):
-    class Meta:
-        serializer_class = UserSerializer
+class CreateComment(graphene.Mutation):
+    comment = graphene.Field(CommentType)
 
-    @classmethod
-    def perform_mutate(cls, serialiser, info):
-        print(info.context.user)
-        return super().perform_mutate(serializer=serialiser, info=info)
+    class Arguments:
+        content = graphene.String(required=True)
+        post_id = graphene.UUID(required=True)
+        parent_comment_id = graphene.UUID()
+
+    def mutate(self, info, content, post_id, parent_comment_id=None):
+        user = info.context.user
+        try:
+            # Find the associated post
+            post = Post.objects.get(id=post_id)
+            #  Find the parent comment
+            parent_comment = None
+            comment = None
+            if parent_comment_id:
+                parent_comment = Comment.objects.get(id=parent_comment_id)
+                comment = Comment(content=content, user=user, post=post, parent_comment=parent_comment)
+                comment.save()
+            else:
+                comment = Comment(content=content, user=user, post=post)
+                print("executed else block")
+                comment.save()
+            print(comment.parent_comment)
+            return CreateComment(comment=comment)
+        except Exception as error:
+            print(error)
+            return CreateComment(comment=None)
+
+
+class CreateUser(graphene.Mutation):
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        first_name = graphene.String(required=True)
+        last_name = graphene.String(required=True)
+        password = graphene.String(required=True)
+        email = graphene.String(required=True)
+
+    def mutate(self, info, password, first_name, last_name, email):
+        user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+        )
+        user.set_password(password)
+        user.save()
+
+        return CreateUser(user=user)
     
 
 class InteractionMutation(graphene.Mutation):
@@ -61,24 +126,25 @@ class InteractionMutation(graphene.Mutation):
     interaction = graphene.Field(InteractionType)
 
     @classmethod
-    def mutate(cls, root, info, user_id, post_id, interaction_type):
+    def mutate(cls, root, info, **kwargs):
+        user = info.context.user
+        check_permission(user, Interaction)
         try:
-            print(info.context.user)
             # Fetch the user and post
-            user = User.objects.get(id=user_id)
-            post = Post.objects.get(id=post_id)
+            user = User.objects.get(id=kwargs.get("user_id"))
+            post = Post.objects.get(id=kwargs.get("post_id"))
 
         except User.DoesNotExist:
-            raise GraphQLError(f"User with ID {user_id} does not exist.")
+            raise GraphQLError(f"User with ID {kwargs.get("user_id")} does not exist.")
         except Post.DoesNotExist:
-            raise GraphQLError(f"Post with ID {post_id} does not exist.")
+            raise GraphQLError(f"Post with ID {kwargs.get("post_id")} does not exist.")
 
         # Check if the interaction already exists
         existing_interaction = Interaction.objects.filter(user=user, post=post).first()
 
         if existing_interaction:
             # Update the existing interaction
-            existing_interaction.interaction_type = interaction_type
+            existing_interaction.interaction_type = kwargs.get("interaction_type")
             existing_interaction.save()
             return InteractionMutation(interaction=existing_interaction)
 
@@ -87,9 +153,14 @@ class InteractionMutation(graphene.Mutation):
             new_interaction = Interaction(
                 user=user,
                 post=post,
-                interaction_type=interaction_type
+                interaction_type=kwargs.get("interaction_type")
             )
             new_interaction.save()
+            if new_interaction.interaction_type == InteractionTypeEnum.LIKE:
+                post.likes_count += 1
+            else:
+                post.shares_count += 1
+            post.save()
             return InteractionMutation(interaction=new_interaction)
 
 
@@ -103,8 +174,13 @@ class PostDeleteMutation(graphene.Mutation):
 
     @classmethod
     def mutate(cls, root, info, id):
-        print(info.context.user)
-        deleteModel(Post, id=id)
+        user = info.context.user
+        try:
+            check_permission(user, Post)
+            deleteModel(Post, id=id)
+            return cls(success=True)
+        except GraphQLError as error:
+            return cls(success=False)
 
 
 class CommentDeleteMutation(graphene.Mutation):
@@ -117,8 +193,13 @@ class CommentDeleteMutation(graphene.Mutation):
 
     @classmethod
     def mutate(cls, root, info, id):
-        print(info.context.user)
-        deleteModel(Comment, id=id)
+        user = info.context.user
+        try:
+            check_permission(user=user, model=Comment)
+            deleteModel(Comment, id=id)
+            return cls(success=True)
+        except GraphQLError as error:
+            return cls(success=False)
 
 class UserDeleteMutation(graphene.Mutation):
     """ This mutation Deletes a model:
@@ -130,8 +211,12 @@ class UserDeleteMutation(graphene.Mutation):
 
     @classmethod
     def mutate(cls, root, info, id):
-        print(info.context.user)
-        deleteModel(User, id=id)
+        if is_staff(info.context.user):
+            try:
+                deleteModel(User, id=id)
+                return cls(success=True)
+            except GraphQLError as error:
+                return cls(success=False)
 
 
 class InteractionDeleteMutation(graphene.Mutation):
@@ -145,14 +230,26 @@ class InteractionDeleteMutation(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, id):
         print(info.context.user)
-        deleteModel(Interaction, id=id)
+        try:
+            deleteModel(Interaction, id=id)
+            return cls(success=True)
+        except GraphQLError as error:
+            return cls(success=False)
 
 class FeedMutation(graphene.ObjectType):
-    create_or_update_post = PostMutation.Field()
+    create_post = CreatePost.Field()
+    update_post = PostMutation.Field()
     delete_post = PostDeleteMutation.Field()
-    create_or_update_comment = CommentMutation.Field()
+    update_comment = CommentMutation.Field()
+    create_comment = CreateComment.Field()
     delete_comment = CommentDeleteMutation.Field()
     create_or_update_interaction = InteractionMutation.Field()
     # delete_interaction = InteractionDeleteMutation.Field()
-    create_or_update_user = UserMutation.Field()
+    create_user = CreateUser.Field()
     delete_user = UserDeleteMutation.Field()
+
+
+class AuthMutation(graphene.ObjectType):
+    sign_in = graphql_jwt.ObtainJSONWebToken.Field()
+    verify_token = graphql_jwt.Verify.Field()
+    refresh_token = graphql_jwt.Refresh.Field()
