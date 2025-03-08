@@ -9,7 +9,7 @@ from .models import Interaction, User, Post, Comment
 from .types import CommentType, InteractionTypeEnum, InteractionType, PostType, UserType
 from django.db.models import Model
 import graphql_jwt
-from .permissions import check_permission, is_staff
+from .permissions import check_is_logged_in, check_permission, is_staff
 
 
 def deleteModel(model: Model, id: graphene.UUID):
@@ -42,9 +42,13 @@ class CreatePost(graphene.Mutation):
 
     def mutate(self, info, content):
         user = info.context.user
-        post = Post(content=content, user=user)
-        post.save()
-        return CreatePost(post=post)
+        try:
+            check_is_logged_in(user=user)
+            post = Post(content=content, user=user)
+            post.save()
+            return CreatePost(post=post)
+        except Exception as error:
+            return CreatePost(post=error)
 
 
 class CommentMutation(SerializerMutation):
@@ -119,7 +123,7 @@ class InteractionMutation(graphene.Mutation):
         Hence, this is handled manually
     """
     class Arguments:
-        user_id = graphene.UUID(required=True)  # The user who interacted
+        # user_id = graphene.UUID(required=True)  # The user who interacted
         post_id = graphene.UUID(required=True)  # The post being interacted with
         interaction_type = InteractionTypeEnum() # Either 'like' or 'share'
 
@@ -128,10 +132,10 @@ class InteractionMutation(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, **kwargs):
         user = info.context.user
-        check_permission(user, Interaction)
+        check_is_logged_in(user)
         try:
             # Fetch the user and post
-            user = User.objects.get(id=kwargs.get("user_id"))
+            user = User.objects.get(id=user.id)
             post = Post.objects.get(id=kwargs.get("post_id"))
 
         except User.DoesNotExist:
@@ -139,29 +143,23 @@ class InteractionMutation(graphene.Mutation):
         except Post.DoesNotExist:
             raise GraphQLError(f"Post with ID {kwargs.get("post_id")} does not exist.")
 
-        # Check if the interaction already exists
-        existing_interaction = Interaction.objects.filter(user=user, post=post).first()
-
-        if existing_interaction:
-            # Update the existing interaction
-            existing_interaction.interaction_type = kwargs.get("interaction_type")
-            existing_interaction.save()
-            return InteractionMutation(interaction=existing_interaction)
-
-        else:
-            # Create a new interaction
+        # Create a new interaction
+        try:
             new_interaction = Interaction(
                 user=user,
                 post=post,
                 interaction_type=kwargs.get("interaction_type")
             )
             new_interaction.save()
+            print(new_interaction.interaction_type)
             if new_interaction.interaction_type == InteractionTypeEnum.LIKE:
                 post.likes_count += 1
             else:
                 post.shares_count += 1
             post.save()
             return InteractionMutation(interaction=new_interaction)
+        except Exception as error:
+            return InteractionMutation(interaction=error)
 
 
 class PostDeleteMutation(graphene.Mutation):
