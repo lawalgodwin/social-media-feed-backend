@@ -82,7 +82,7 @@ class Interaction(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interactions')  # User who interacted
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')  # The post being interacted with
-    interaction_type = models.CharField(max_length=10, choices=InteractionType)  # Type of interaction (like or share)
+    interaction_type = models.CharField(max_length=10, choices=InteractionType)  # Type of interaction(like or share)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the interaction occurred
 
     class Meta:
