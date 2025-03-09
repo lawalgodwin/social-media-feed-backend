@@ -1,10 +1,9 @@
 """ This module contains all the grapgql mutations """
 
 import graphene
-from django.contrib.auth.decorators import login_required
 from graphene_django.rest_framework.mutation import SerializerMutation
 from graphql import GraphQLError
-from .serializers import CommentSerializer, PostSerializer, UserSerializer
+from .serializers import CommentSerializer, PostSerializer
 from .models import Interaction, User, Post, Comment
 from .types import CommentType, InteractionTypeEnum, InteractionType, PostType, UserType
 from django.db.models import Model
@@ -17,7 +16,7 @@ def deleteModel(model: Model, id: graphene.UUID):
     try:
         instance = model.objects.get(id=id)
         instance.delete()
-    except Post.DoesNotExist as error:
+    except Post.DoesNotExist:
         raise GraphQLError("model doest not exist")
 
 
@@ -53,6 +52,7 @@ class CreatePost(graphene.Mutation):
 
 class CommentMutation(SerializerMutation):
     comment = graphene.Field(CommentType)
+
     class Meta:
         serializer_class = CommentSerializer
 
@@ -62,7 +62,7 @@ class CommentMutation(SerializerMutation):
         try:
             check_permission(user=user, model=Comment)
             return super().perform_mutate(serialiser, info, **kwargs)
-        except GraphQLError as error:
+        except GraphQLError:
             return cls(comment=None)
 
 
@@ -92,8 +92,7 @@ class CreateComment(graphene.Mutation):
                 comment.save()
             print(comment.parent_comment)
             return CreateComment(comment=comment)
-        except Exception as error:
-            print(error)
+        except Exception:
             return CreateComment(comment=None)
 
 
@@ -116,7 +115,7 @@ class CreateUser(graphene.Mutation):
         user.save()
 
         return CreateUser(user=user)
-    
+
 
 class InteractionMutation(graphene.Mutation):
     """ SerializerMutation does not support a model with choiceField out of the box
@@ -125,7 +124,7 @@ class InteractionMutation(graphene.Mutation):
     class Arguments:
         # user_id = graphene.UUID(required=True)  # The user who interacted
         post_id = graphene.UUID(required=True)  # The post being interacted with
-        interaction_type = InteractionTypeEnum() # Either 'like' or 'share'
+        interaction_type = InteractionTypeEnum()  # Either 'like' or 'share'
 
     interaction = graphene.Field(InteractionType)
 
@@ -165,9 +164,10 @@ class InteractionMutation(graphene.Mutation):
 class PostDeleteMutation(graphene.Mutation):
     """ This mutation Deletes a model:
     """
+
     class Arguments:
-        id = graphene.UUID(required=True) # The id of the model to delete
-    
+        id = graphene.UUID(required=True)  # The id of the model to delete
+
     success = graphene.Boolean()
 
     @classmethod
@@ -177,7 +177,7 @@ class PostDeleteMutation(graphene.Mutation):
             check_permission(user, Post)
             deleteModel(Post, id=id)
             return cls(success=True)
-        except GraphQLError as error:
+        except GraphQLError:
             return cls(success=False)
 
 
@@ -185,8 +185,8 @@ class CommentDeleteMutation(graphene.Mutation):
     """ This mutation Deletes a model:
     """
     class Arguments:
-        id = graphene.UUID(required=True) # The id of the model to delete
-    
+        id = graphene.UUID(required=True)  # The id of the model to delete
+
     success = graphene.Boolean()
 
     @classmethod
@@ -196,15 +196,16 @@ class CommentDeleteMutation(graphene.Mutation):
             check_permission(user=user, model=Comment)
             deleteModel(Comment, id=id)
             return cls(success=True)
-        except GraphQLError as error:
+        except GraphQLError:
             return cls(success=False)
+
 
 class UserDeleteMutation(graphene.Mutation):
     """ This mutation Deletes a model:
     """
     class Arguments:
-        id = graphene.UUID(required=True) # The id of the model to delete
-    
+        id = graphene.UUID(required=True)  # The id of the model to delete
+
     success = graphene.Boolean()
 
     @classmethod
@@ -213,7 +214,7 @@ class UserDeleteMutation(graphene.Mutation):
             try:
                 deleteModel(User, id=id)
                 return cls(success=True)
-            except GraphQLError as error:
+            except GraphQLError:
                 return cls(success=False)
 
 
@@ -221,8 +222,8 @@ class InteractionDeleteMutation(graphene.Mutation):
     """ This mutation Deletes a model:
     """
     class Arguments:
-        id = graphene.UUID(required=True) # The id of the model to delete
-    
+        id = graphene.UUID(required=True)  # The id of the model to delete
+
     success = graphene.Boolean()
 
     @classmethod
@@ -231,8 +232,9 @@ class InteractionDeleteMutation(graphene.Mutation):
         try:
             deleteModel(Interaction, id=id)
             return cls(success=True)
-        except GraphQLError as error:
+        except GraphQLError:
             return cls(success=False)
+
 
 class FeedMutation(graphene.ObjectType):
     create_post = CreatePost.Field()

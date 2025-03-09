@@ -150,5 +150,5 @@ GRAPHENE = {
     "SCHEMA": "config.schema.schema",
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
-    ],    
+    ],
 }
