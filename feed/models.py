@@ -1,9 +1,9 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from feed.managers import CustomUserManager
 from django.utils.translation import gettext_lazy as _
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """ The user Model an extension of the Abstract user for
@@ -13,8 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         NORMAL = "normal",
         ADMIN = "admin"
-    
-   
+
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -30,9 +29,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
-    
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
 
 # Model to represent posts
 class Post(models.Model):
@@ -51,6 +50,7 @@ class Post(models.Model):
     def __str__(self):
         return f"Post {self.id} by {self.user.first_name} {self.user.last_name}"
 
+
 # Model to represent comments on a post
 class Comment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
@@ -58,7 +58,11 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')  # The post being commented on
     content = models.TextField()  # The content of the comment
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the comment was created
-    parent_comment = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE, db_index=True) # For replies to comments
+    parent_comment = models.ForeignKey(
+        'self', null=True, blank=True,
+        related_name='replies', on_delete=models.CASCADE,
+        db_index=True
+    )  # For replies to comments
 
     class Meta:
         ordering = ['-created_at']  # Comments ordered by creation time (most recent first)
@@ -74,7 +78,7 @@ class Interaction(models.Model):
     class InteractionType(models.TextChoices):
         LIKE = "like", _("Like"),
         SHARE = "share", _("Share"),
-    
+
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interactions')  # User who interacted
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')  # The post being interacted with
@@ -85,6 +89,5 @@ class Interaction(models.Model):
         db_table = 'feed_interactions'
         unique_together = ('user', 'post', 'interaction_type')  # Ensure one like or share per user/post
 
-    
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} {self.interaction_type}d Post {self.post.id}"

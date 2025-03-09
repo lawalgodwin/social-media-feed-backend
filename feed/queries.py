@@ -25,7 +25,7 @@ class FeedQuery(graphene.ObjectType):
         # We can easily optimize query count in the resolve method
         print(info.context.user)
         return Interaction.objects.prefetch_related("post").all()
-    
+
     def resolve_interactions_by_type(self, info, interaction_type=None):
         # Filter interactions by type if interaction_type is provided
         print(info.context.user)
@@ -46,7 +46,7 @@ class FeedQuery(graphene.ObjectType):
             return Post.objects.filter(user=user_id)
         except Exception as exception:
             raise exception
-    
+
     def resolve_most_liked_posts(self, info):
         pass
 
@@ -67,5 +67,5 @@ class FeedQuery(graphene.ObjectType):
     def resolve_user_by_email(root, info, email):
         try:
             return User.objects.get(email=email)
-        except User.DoesNotExist as exception:
+        except User.DoesNotExist:
             raise GraphQLError("User does not exist")
