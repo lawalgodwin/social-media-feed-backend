@@ -31,7 +31,6 @@ jobs:
             python3 -m venv venv
             source venv/bin/activate
             echo "Clonning the repo"
-            ls -l
-            bash -c "rm -rf social-media-fedd-backend && git clone https://github.com/lawalgodwin/social-media-feed-backend.git"
+            bash -c "rm -rf social-media-fedd-backend && ls -l && git clone https://github.com/lawalgodwin/social-media-feed-backend.git"
             echo "after clonning"
             ls -l
