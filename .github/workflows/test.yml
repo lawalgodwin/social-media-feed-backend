@@ -26,6 +26,4 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           port: 22
-          script: |
-            pwd
-            ls -l
+          script_path: /home/ubuntu/deploy.sh
