@@ -27,8 +27,11 @@ jobs:
             sudo apt update -y
             app=$(sudo netstat -tulnp | grep 8000 | awk '{print $7}' | awk -F '/' '{print $1}')
             bash -c "kill -sTERM $app"
-            bash -c "rm -rf social-media-fedd-backend"
             sudo apt install python3-venv
             python3 -m venv venv
             source venv/bin/activate
-            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
+            echo "Clonning the repo"
+            ls -l
+            bash -c "rm -rf social-media-fedd-backend && git clone https://github.com/lawalgodwin/social-media-feed-backend.git"
+            echo "after clonning"
+            ls -l
