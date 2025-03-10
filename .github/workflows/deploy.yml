@@ -1,0 +1,41 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Test the workflow
+        shell: bash
+        run: |
+          echo "Hello world"
+          
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: godwindev.jumpingcrab.com
+          username: ubuntu
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo apt update -y
+            app=$(sudo netstat -tulnp | grep 8000 | awk '{print $7}' | awk -F '/' '{print $1}')
+            bash -c "kill -sTERM $app"
+            sudo apt install python3-venv
+            bash -c "rm -rf social-media-feed-backend"
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git -b main
+            cd social-media-feed-backend
+            python3 -m venv venv
+            source venv/bin/activate            
+            cp ../.env .
+            pip install -r requirements.txt
+            python manage.py makemigrations
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            python manage.py runserver 0.0.0.0:8000
