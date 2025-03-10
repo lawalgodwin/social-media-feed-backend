@@ -28,4 +28,4 @@ jobs:
           port: 22
           script: |
             pwd
-            ll
+            ls -l
