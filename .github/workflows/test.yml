@@ -31,4 +31,4 @@ jobs:
             python3 -m venv venv
             source venv/bin/activate
             bash -c "rm -rf social-media-feed-backend"
-            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git -b main
