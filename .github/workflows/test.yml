@@ -34,4 +34,8 @@ jobs:
             ls -l
             sudo apt install python3-venv
             python3 -m venv venv
-            docker compose up --build -d
+            pip install -r requirements.txt
+            python manage.py makemigrations
+            python manage.py migrate
+            python manage.py collectstatic
+            python manage.py runserver 0.0.0.0:8000
