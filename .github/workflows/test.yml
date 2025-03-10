@@ -32,4 +32,5 @@ jobs:
             git clone https://github.com/lawalgodwin/social-media-feed-backend.git
             cd social-media-feed-backend
             ls -l
-            python3 -v
+            sudo apt install python3-venv
+            python3 -m venv venv
