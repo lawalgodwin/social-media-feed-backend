@@ -34,3 +34,4 @@ jobs:
             ls -l
             sudo apt install python3-venv
             python3 -m venv venv
+            docker compose up --build -d
