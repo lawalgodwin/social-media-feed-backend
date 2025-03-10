@@ -28,7 +28,7 @@ jobs:
           port: 22
           script: |
             sudo apt update -y
-            rm -rf social-media-fedd-backend
+            rm -rf social-media-feed-backend
             git clone https://github.com/lawalgodwin/social-media-feed-backend.git
             cd social-media-feed-backend
             python3 -m venv venv
