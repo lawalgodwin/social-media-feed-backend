@@ -26,6 +26,17 @@ jobs:
           script: |
             sudo apt update -y
             app=$(sudo netstat -tulnp | grep 8000 | awk '{print $7}' | awk -F '/' '{print $1}')
-            kill -sTERM $app
-            bash -c "rm -rf social-media-feed-backend"
+            bash -c "kill -sTERM $app"
+            bash -c "rm -rf social-media-fedd-backend"
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
+            cd social-media-feed-backend
             ls -l
+            sudo apt install python3-venv
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+            cp ../.env .
+            python manage.py makemigrations
+            python manage.py migrate
+            echo "yes" | python manage.py collectstatic
+            python manage.py runserver 0.0.0.0:8000
