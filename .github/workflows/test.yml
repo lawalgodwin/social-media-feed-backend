@@ -28,11 +28,11 @@ jobs:
             app=$(sudo netstat -tulnp | grep 8000 | awk '{print $7}' | awk -F '/' '{print $1}')
             bash -c "kill -sTERM $app"
             sudo apt install python3-venv
-            python3 -m venv venv
-            source venv/bin/activate
             bash -c "rm -rf social-media-feed-backend"
             git clone https://github.com/lawalgodwin/social-media-feed-backend.git -b main
             cd social-media-feed-backend
+            python3 -m venv venv
+            source venv/bin/activate            
             cd ../.env .
             python manage.py makemigrations
             python manage.py migrate --noinput
