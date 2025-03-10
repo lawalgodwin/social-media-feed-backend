@@ -31,6 +31,6 @@ jobs:
             python3 -m venv venv
             source venv/bin/activate
             echo "Clonning the repo"
-            bash -c "rm -r -v social-media-fedd-backend || ls -l"
+            bash -c "rm -r -v 'social-media-fedd-backend' || ls -l"
             echo "after clonning"
 
