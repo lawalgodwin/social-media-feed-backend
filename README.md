@@ -74,5 +74,5 @@ The project emphasizes GraphQL API development, real-time interactions, and scal
 
 ### Accessing the API
 
-- The api is accessible on the host on port 8000
+- The api is accessible on the host [http://localhost:8000/graphql]
 - Visit [samples api requests](apidocs.md) to see samples of queries and mutations
