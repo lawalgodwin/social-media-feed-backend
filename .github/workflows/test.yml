@@ -31,3 +31,4 @@ jobs:
             sudo apt install python3-venv
             python3 -m venv venv
             source venv/bin/activate
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
