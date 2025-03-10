@@ -138,9 +138,9 @@ class InteractionMutation(graphene.Mutation):
             post = Post.objects.get(id=kwargs.get("post_id"))
 
         except User.DoesNotExist:
-            raise GraphQLError(f"User with ID {kwargs.get("user_id")} does not exist.")
+            raise GraphQLError(f'User with ID {kwargs.get("user_id")} does not exist.')
         except Post.DoesNotExist:
-            raise GraphQLError(f"Post with ID {kwargs.get("post_id")} does not exist.")
+            raise GraphQLError(f'Post with ID {kwargs.get("post_id")} does not exist.')
 
         # Create a new interaction
         try:

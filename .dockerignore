@@ -1,0 +1,52 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+
+# Ignore virtual environment directories
+venv/
+env/
+.env/
+
+# Ignore local environment files
+.env
+.env.prod
+.env.local
+.env.*.local
+
+# Ignore Django-specific files
+*.log
+*.pot
+*.py.orig
+
+# Ignore database files
+*.sqlite3
+
+# Ignore node modules and package managers
+node_modules/
+package-lock.json
+yarn.lock
+
+# Ignore macOS files
+.DS_Store
+
+# Ignore migration files (optional, depending on your workflow)
+migrations/
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.swp
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore Docker files
+docker-compose.yml
+docker-compose.override.yml
+
+# Ignore static and media files (optional, depending on your workflow)
+static/
+media/
