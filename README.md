@@ -37,3 +37,42 @@ The project emphasizes GraphQL API development, real-time interactions, and scal
 
 3. **API Testing**
     - Publish a hosted GraphQL Playground for easy testing.
+
+### Prerequisites
+
+- Python 3.x
+
+- Docker (optional for containerization)
+
+- Set your envronment variables in a **.env** file at the project root using the sample in [env variables](.env.example)
+
+### Getting Started
+
+- **create aand activate a virtual environment**
+
+```bash
+    python3 -m venv venv && source venv/bin/activate
+```
+
+- **clone the repo and cd into the repo**
+
+```bash
+    git clone https://github.com/lawalgodwin/social-media-feed-backend.git && cd social-media-feed-backend
+```
+
+- **install dependencies and prepare the database**
+
+```bash
+    pip install -r requirements.txt && ./manage.py makemigrations && ./manage.py migrate
+```
+
+- **run the command below to start the api**
+
+```bash
+    ./manage.py runserver 0.0.0.0:8000
+```
+
+### Accessing the API
+
+- The api is accessible on the host on port 8000
+- Visit [samples api requests](apidocs.md) to see samples of queries and mutations
