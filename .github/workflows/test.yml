@@ -26,4 +26,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           port: 22
-          script_path: /home/ubuntu/deploy.sh
+          script: |
+            sudo apt update -y
+            rm -rf social-media-fedd-backend
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
