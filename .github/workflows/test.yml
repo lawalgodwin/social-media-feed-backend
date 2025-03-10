@@ -28,3 +28,4 @@ jobs:
             app=$(sudo netstat -tulnp | grep 8000 | awk '{print $7}' | awk -F '/' '{print $1}')
             kill -sTERM $app
             rm -rf social-media-fedd-backend
+            ls -l
