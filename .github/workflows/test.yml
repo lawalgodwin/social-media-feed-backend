@@ -37,6 +37,6 @@ jobs:
             cp ../.env .
             python manage.py makemigrations
             python manage.py migrate
-            bash -c "echo 'yes' | python manage.py collectstatic"
+            bash -c "python manage.py collectstatic --noinput"
             ls -la
             python manage.py runserver 0.0.0.0:8000
