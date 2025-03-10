@@ -30,7 +30,6 @@ jobs:
             bash -c "rm -rf social-media-fedd-backend"
             git clone https://github.com/lawalgodwin/social-media-feed-backend.git
             cd social-media-feed-backend
-            ls -l
             sudo apt install python3-venv
             python3 -m venv venv
             source venv/bin/activate
@@ -38,5 +37,6 @@ jobs:
             cp ../.env .
             python manage.py makemigrations
             python manage.py migrate
-            echo "yes" | python manage.py collectstatic
+            bash -c "echo 'yes' | python manage.py collectstatic"
+            ls -la
             python manage.py runserver 0.0.0.0:8000
