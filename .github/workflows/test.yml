@@ -39,4 +39,5 @@ jobs:
             python manage.py migrate
             bash -c "python manage.py collectstatic --noinput"
             ls -la
+            cat config/settings.py | grep STATIC
             python manage.py runserver 0.0.0.0:8000
