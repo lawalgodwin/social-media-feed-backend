@@ -30,7 +30,5 @@ jobs:
             sudo apt install python3-venv
             python3 -m venv venv
             source venv/bin/activate
-            echo "Clonning the repo"
-            bash -c "rm -r -v 'social-media-fedd-backend' || ls -l"
-            echo "after clonning"
-
+            bash -c "rm -rf social-media-feed-backend"
+            git clone https://github.com/lawalgodwin/social-media-feed-backend.git
